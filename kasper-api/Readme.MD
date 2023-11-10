@@ -6,3 +6,7 @@
 ## Create database
 5. poetry run alembic upgrade head
 6. poetry run fastapi-app
+
+
+## Make migration
+poetry run alembic revision --autogenerate

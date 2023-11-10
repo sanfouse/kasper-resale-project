@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from src.database.connection import database
-from src.routers import users, universities, adverts, dormitories
+from src.routers import users, universities, adverts, dormitories, categories
 from fastapi.templating import Jinja2Templates
 
 
@@ -30,6 +30,7 @@ async def shutdown():
 
 
 app.include_router(users.router)
+app.include_router(categories.router)
 app.include_router(adverts.router)
-app.include_router(universities.router)
 app.include_router(dormitories.router)
+app.include_router(universities.router)

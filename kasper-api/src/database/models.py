@@ -20,7 +20,35 @@ class User(ormar.Model):
     id: int = ormar.BigInteger(primary_key=True)
     username: str = ormar.String(max_length=255)
 
-    vk_url: str = ormar.String(max_length=255, default=None)
+    vk_url: str = ormar.String(max_length=255, default=None, nullable=True)
+
+
+class University(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = 'universities'
+
+    id: int = ormar.BigInteger(primary_key=True)
+    name: str = ormar.String(max_length=255)
+
+
+class Dormitory(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "dormitories"
+
+    id: int = ormar.BigInteger(primary_key=True)
+    name: str = ormar.String(max_length=255)
+
+    university: University = ormar.ForeignKey(University)
+
+
+class Category(ormar.Model):
+    class Meta(BaseMeta):
+        tablename = "categories"
+
+    id: int = ormar.BigInteger(primary_key=True)
+    name: str = ormar.String(max_length=255)
+
+    url: str = ormar.String(max_length=255)
 
 
 class Advert(ormar.Model):
@@ -35,24 +63,6 @@ class Advert(ormar.Model):
     price: str = ormar.Decimal(max_digits=12, decimal_places=2, default=0)
     date: datetime.datetime = ormar.DateTime(default=datetime.datetime.now)
 
-    user: Optional[List[User]] = ormar.ManyToMany(User)
-
-
-class Dormitory(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = "dormitories"
-
-    id: int = ormar.BigInteger(primary_key=True)
-    name: str = ormar.String(max_length=255)
-
-    adverts: Optional[List[Advert]] = ormar.ManyToMany(Advert)
-
-
-class University(ormar.Model):
-    class Meta(BaseMeta):
-        tablename = 'universities'
-
-    id: int = ormar.BigInteger(primary_key=True)
-    name: str = ormar.String(max_length=255)
-
-    dormitories: Optional[List[Dormitory]] = ormar.ManyToMany(Dormitory)
+    user: User = ormar.ForeignKey(User)
+    dormitory: Dormitory = ormar.ForeignKey(Dormitory)
+    category: Category = ormar.ForeignKey(Category)
