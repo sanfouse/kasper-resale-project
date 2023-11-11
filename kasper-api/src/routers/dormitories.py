@@ -5,9 +5,15 @@ from src import schemas
 
 router = APIRouter(prefix='/api/v1/dormitories', tags=['Общежития'])
 
-@router.get('/')
+@router.get('/all')
 async def get_dormitories():
     return await models.Dormitory.objects.prefetch_related(['adverts', 'university']).all()
+
+
+@router.get('/')
+async def get_dormitories_by_university(id: int):
+    return await models.Dormitory.objects.filter(university=id).all()
+
 
 
 @router.post('/create')

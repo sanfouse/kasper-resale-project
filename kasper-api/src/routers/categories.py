@@ -7,7 +7,7 @@ router = APIRouter(prefix='/api/v1/categories', tags=['Категории'])
 
 @router.get('/')
 async def get_categories():
-    return await models.Category.objects.select_related('adverts').all()
+    return await models.Category.objects.all()
 
 
 @router.post('/create')
