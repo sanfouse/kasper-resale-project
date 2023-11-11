@@ -4,7 +4,9 @@ from src.database import models
 from src import schemas
 from typing import List
 
+
 router = APIRouter(prefix='/api/v1/adverts', tags=['Товары'])
+
 
 @router.get('/all')
 async def get_adverts() -> List[models.Advert]:

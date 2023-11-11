@@ -4,7 +4,7 @@ from aiogram.filters.callback_data import CallbackData
 from services.universities import get_universities
 from services.dormitory import get_dormitory_by_university
 from services.categories import get_all_categories
-
+from enum import Enum
 
 class UniversityCallback(CallbackData, prefix="university"):
     id: int
@@ -21,6 +21,33 @@ class CategoryCallback(CallbackData, prefix="category"):
     name: str
 
 
+class ActionCancel(str, Enum):
+    cancel = 'Отмена'
+
+
+class ActionStart(str, Enum):
+    start = 'Смотреть'
+    cancel = 'Отмена'
+
+
+class ActionAdvert(str, Enum):
+    next = 'Cледующий'
+    cancel = 'Отмена'
+
+
+class ViewAdvertsStart(CallbackData, prefix='view_adverts_start'):
+    action: ActionStart
+
+
+class ViewAdverts(CallbackData, prefix='view_adverts'):
+    action: ActionAdvert
+
+
+class Cancel(CallbackData, prefix='cancel'):
+    action: ActionCancel
+
+
+
 async def universities_choose_keyboard() -> InlineKeyboardBuilder:
     builder = InlineKeyboardBuilder()
     universities: list = await get_universities()
@@ -28,6 +55,10 @@ async def universities_choose_keyboard() -> InlineKeyboardBuilder:
         builder.button(
             text=university['name'],
             callback_data=UniversityCallback(id=university['id'], name=university['name'])
+        )
+    builder.button(
+            text=ActionCancel.cancel.value.title(),
+            callback_data=Cancel(action=ActionCancel.cancel)
         )
     builder.adjust(1)
     return builder
@@ -41,6 +72,10 @@ async def dormitories_choose_keyboard(id: int) -> InlineKeyboardBuilder:
             text=dormitory['name'],
             callback_data=DormitoryCallback(id=dormitory['id'], name=dormitory['name'])
         )
+    builder.button(
+            text=ActionCancel.cancel.value.title(),
+            callback_data=Cancel(action=ActionCancel.cancel)
+        )
     builder.adjust(1)
     return builder
 
@@ -53,5 +88,35 @@ async def categories_choose_keyboard() -> InlineKeyboardBuilder:
             text=category['name'],
             callback_data=CategoryCallback(id=category['id'], name=category['name'])
         )
+    builder.button(
+            text=ActionCancel.cancel.value.title(),
+            callback_data=Cancel(action=ActionCancel.cancel)
+        )
+    builder.adjust(1)
+    return builder
+
+
+async def view_adverts_start_keyboard() -> InlineKeyboardBuilder:
+    builder = InlineKeyboardBuilder()
+    
+    for action in ActionStart:
+        builder.button(
+            text=action.value.title(),
+            callback_data=ViewAdvertsStart(action=action)
+        )
+
+    builder.adjust(1)
+    return builder
+
+
+async def view_adverts_keyboard() -> InlineKeyboardBuilder:
+    builder = InlineKeyboardBuilder()
+    
+    for action in ActionAdvert:
+        builder.button(
+            text=action.value.title(),
+            callback_data=ViewAdverts(action=action)
+        )
+
     builder.adjust(1)
     return builder

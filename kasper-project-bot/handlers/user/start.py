@@ -7,10 +7,13 @@ from aiogram.fsm.context import FSMContext
 from keyboards.user import inline
 from services.users import get_or_create_user
 from services.defaults import default_state_update_data
+from services.adverts import get_adverts
+
+
 
 start = Router()
 
-@start.message(CommandStart())
+@start.message(StateFilter(None), CommandStart())
 async def start_message(message: types.Message, state: FSMContext) -> None:
     await get_or_create_user(message=message)
     await state.set_state(Default.settings)
@@ -24,7 +27,7 @@ async def start_message(message: types.Message, state: FSMContext) -> None:
         )
     
 
-@start.callback_query(StateFilter(Default), inline.UniversityCallback.filter())
+@start.callback_query(StateFilter(Default.settings), inline.UniversityCallback.filter())
 async def choose_dormitory(
         call: types.CallbackQuery, 
         callback_data: inline.UniversityCallback, 
@@ -40,7 +43,7 @@ async def choose_dormitory(
     )
 
 
-@start.callback_query(StateFilter(Default), inline.DormitoryCallback.filter())
+@start.callback_query(StateFilter(Default.settings), inline.DormitoryCallback.filter())
 async def choose_category(
         call: types.CallbackQuery, 
         callback_data: inline.DormitoryCallback, 
@@ -53,4 +56,46 @@ async def choose_category(
     await call.message.edit_text(
         f"Вы выбрали {callback_data.name}\nВыберите категорию:",
         reply_markup=builder.as_markup()
+    )
+
+
+@start.callback_query(StateFilter(Default.settings), inline.CategoryCallback.filter())
+async def accept_settings(
+        call: types.CallbackQuery, 
+        callback_data: inline.CategoryCallback, 
+        state: FSMContext
+    ) -> None:
+    await state.update_data(
+        category=callback_data.id
+    )
+    await call.message.edit_text(
+        f"Вы выбрали {callback_data.name}\nСмотрите товары:",
+    )
+    data = await state.get_data()
+    category = data.get('category')
+    dormitory = data.get('dormitory')
+    adverts = await get_adverts(category=category, dormitory=dormitory)
+    page = 0
+    await state.update_data(
+        adverts=adverts,
+        page=page
+    )
+    builder = await inline.view_adverts_start_keyboard()
+    if len(adverts) == 0:
+        builder._markup.pop(0)
+    await call.message.answer(
+        text=f'Найдено {len(adverts)} товаров',
+        reply_markup=builder.as_markup()
+    )
+
+
+@start.callback_query(StateFilter(Default.settings), inline.Cancel.filter())
+async def cancel(
+        call: types.CallbackQuery, 
+        callback_data: inline.CategoryCallback, 
+        state: FSMContext
+    ) -> None:
+    await state.clear()
+    await call.message.answer(
+        text='cancel'
     )

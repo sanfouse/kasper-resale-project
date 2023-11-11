@@ -3,11 +3,12 @@ from fastapi.staticfiles import StaticFiles
 from src.database.connection import database
 from src.routers import users, universities, adverts, dormitories, categories
 from fastapi.templating import Jinja2Templates
-
+from fastapi_pagination import add_pagination
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
+add_pagination(app)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/media", StaticFiles(directory="media"), name="media")
