@@ -4,21 +4,29 @@ from aiogram import Router
 from states.default import Default
 from aiogram.fsm.context import FSMContext
 from keyboards.user import inline
+from services.adverts import get_adverts
+
 
 menu = Router()
 
 async def view_advert(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     page: int = data.get('page')
-    adverts: list = data.get('adverts')
+
+    adverts, total_adverts = await get_adverts(
+            category=data.get('category'), 
+            dormitory=data.get('dormitory'),
+            page=page + 1
+        )
     builder = await inline.view_adverts_keyboard()
-    if page == len(adverts) - 1:
+    if page == total_adverts - 1:
         builder._markup.pop(0)
-    await call.message.answer(
-        text=f"{adverts[page]['name']}\n{adverts[page]['price']}\n",
-        reply_markup=builder.as_markup()
+    await call.message.answer_photo(
+        caption=f"{adverts[0]['name']}\n{adverts[0]['price']}\n",
+        reply_markup=builder.as_markup(),
+        photo='https://i.pinimg.com/originals/f4/ea/93/f4ea935789d37ac9d025f29ecee00aa6.jpg'
     )
-    return await state.update_data(page=page + 1)
+    return await state.update_data(page=page + 1, adverts=adverts[0])
 
 
 
@@ -27,14 +35,13 @@ async def view_adverts_settings(call: types.CallbackQuery, callback_data: inline
     if callback_data.action == inline.ActionStart.start:
         await state.set_state(Default.view)
         return await view_advert(call=call, state=state)
-    else:
-        await call.message.answer("cancel")
-        await state.clear()
+    await call.message.answer("cancel /start for restart")
+    return await state.clear()
 
 
 @menu.callback_query(StateFilter(Default.view), inline.ViewAdverts.filter())
 async def view_adverts_settings(call: types.CallbackQuery, callback_data: inline.ViewAdverts, state: FSMContext):
     if callback_data.action == inline.ActionAdvert.cancel:
-        await call.message.answer("cancel")
+        await call.message.answer("cancel /start for restart")
         return await state.clear()
-    await view_advert(call=call, state=state)
+    return await view_advert(call=call, state=state)

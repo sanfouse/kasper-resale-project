@@ -1,2 +1,2 @@
 from .menu import menu
-from .start import start
+from .settings import settings

@@ -2,7 +2,8 @@ from fastapi import APIRouter
 from fastapi.responses import Response
 from src.database import models
 from src import schemas
-from typing import List
+from fastapi import Query, HTTPException
+from typing import Dict, List, Union
 
 
 router = APIRouter(prefix='/api/v1/adverts', tags=['Товары'])
@@ -31,7 +32,16 @@ async def create_advert(advert: schemas.Advert) -> models.Advert:
     )
 
 
-@router.get('/')
-async def get_adverts_by_category_by_dormitory(category: int, dormitory: int) -> List[models.Advert]:
-    return await models.Advert.objects.filter(category=category, dormitory=dormitory).all()
-     
+@router.get('/paginate')
+async def get_adverts_by_category_by_dormitory(
+    category: int,
+    dormitory: int,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(1, le=100)
+) -> Dict[str, Union[List[models.Advert], int]]:
+    skip = (page - 1) * page_size
+    adverts = await models.Advert.objects.filter(category=category, dormitory=dormitory).offset(skip).limit(page_size).all()
+    
+    total_adverts = await models.Advert.objects.filter(category=category, dormitory=dormitory).count()
+
+    return {"adverts": adverts, "total_adverts": total_adverts}
